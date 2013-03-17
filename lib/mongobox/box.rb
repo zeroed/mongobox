@@ -1,12 +1,5 @@
 module Mongobox
   require 'mongo'
-  
-  module Constants
-    
-    UserKeyPath = "config/db-user"
-    MongolabUrl = "mongodb://ds051077.mongolab.com:51077"
-  
-  end # Constants
 
   class Box
     
@@ -32,7 +25,7 @@ module Mongobox
       @database = db
     end
 
-    def collection_names
+    def collections
       collections = []
       @database.collection_names.each do |c|
         puts "#{c} : #{@database.collection(c).count}"
@@ -41,26 +34,21 @@ module Mongobox
       collections
     end
 
-    def collection collection_name
-      @database.collection(collection_name)
-    end
-
-    def find_all(collection_name)
-      all = []
-      collection(collection_name).find.each do |element|
-        all << element
+    def collection(collection_name = nil)
+      if collection_name
+        @collection = @database.collection(collection_name)
+      else
+        @collection
       end
-      all
     end
 
-    def store(item,collection_name="notes")
-      collection = @database.collection(collection_name)
+    def store(item)
       begin
         id = collection.insert(item.merge({:timestamp => Time.now}))
       rescue Mongo::OperationFailure => failure
         failure
       else
-       collection.find("_id" => id).to_a
+       collection.find("_id" => id).first
       end
     end
 
@@ -68,7 +56,13 @@ module Mongobox
       collection.remove(key.intern => value)
     end
 
-    def find(collection,key,value)
+    def get(id)
+      #find_one take the first element in the collection
+      collection.find("_id" => build_id(id_value)).first
+    end
+
+    def find(key,value,*fields)
+      #TODO :fields => [arg0,arg1...]
       collection.find(key.intern => value).sort(:timestamp => :desc).to_a
     end
 
@@ -80,16 +74,32 @@ module Mongobox
       # TODO
     end
 
-    def find_with_regex
-      # TODO
+    def find_with_regex(key,query,*options)
+      # Regexp::IGNORECASE #=> 1
+      # Regexp::EXTENDED #=> 2
+      # Regexp::MULTILINE #=> 4
+      find(key,Regexp.new(query, options.join('|')))
+    end
+
+    def find_all
+      all = []
+      collection.find.each do |element|
+        all << element
+      end
+      all
     end
 
     def update(id, item)
-      collection.update({"_id" => id}, doc)
+      collection.update({"_id" => build_id(id)}, item.merge(:timestamp => Time.now))
     end
 
     def update_field(id, key, value)
-      collection.update({"_id" => id}, {"$set" => {key.itern => value, :timestamp => Time.now}})
+      collection.update({"_id" => build_id(id)}, {"$set" => {key.itern => value, :timestamp => Time.now}})
+    end
+
+    def copy(item)
+      item['_id'] = nil
+      store(item)
     end
 
     def geospatial_index(collection)
@@ -99,6 +109,19 @@ module Mongobox
       end
     end
 
-  end # Api
+    def build_id id_value
+      BSON::ObjectId id_value
+    end
+
+    def analize result_of_search
+      #TODO
+      # each_with_index(*args) { |obj, i| block } -> enum
+      # grep(pattern) { |obj| block } -> array
+      # inject(initial) { |memo, obj| block } -> obj
+      # lazy -> lazy_enumerator
+      # map { |obj| block } -> array
+    end
+
+  end # Box
 
 end # Mongobox
