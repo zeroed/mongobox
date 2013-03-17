@@ -1,5 +1,4 @@
 module Mongobox
-  require 'mongo'
 
   class Box
     
@@ -8,10 +7,10 @@ module Mongobox
 
     attr_reader :database
 
-    def initialize(database_name,args={})
+    def initialize(database_name, args = {}, collection_name = nil)
       args.merge({strict: false}) unless args[:strict]
+      db = Mongo::Connection.from_uri(MongolabUrl).db(database_name)
       if args[:login] && args[:password]
-        db = Mongo::Connection.from_uri(MongolabUrl).db(database_name)
         db.authenticate(args[:login],args[:password])
       else
         login, password = 
@@ -19,7 +18,6 @@ module Mongobox
             key = l.readline
             key.chomp!
           end.split '|'
-          db = Mongo::Connection.from_uri(MongolabUrl).db(database_name)
           db.authenticate(login,password)
       end
       @database = db
@@ -38,7 +36,7 @@ module Mongobox
       if collection_name
         @collection = @database.collection(collection_name)
       else
-        @collection
+        @collection || (raise "collection undefined")
       end
     end
 
@@ -57,7 +55,6 @@ module Mongobox
     end
 
     def get(id)
-      #find_one take the first element in the collection
       collection.find("_id" => build_id(id_value)).first
     end
 

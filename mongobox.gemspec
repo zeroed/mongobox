@@ -13,10 +13,6 @@ Gem::Specification.new do |spec|
   spec.homepage      = "https://github.com/zeroed/mongobox"
   spec.license       = "GPL-3"
 
-  spec.add_dependency = "rspec"
-  spec.add_dependency = "mongo"
-  spec.add_dependency = "bson"
-
   spec.files         = `git ls-files`.split($/)
   spec.executables   = spec.files.grep(%r{^bin/}) { |f| File.basename(f) }
   spec.test_files    = spec.files.grep(%r{^(test|spec|features)/})
@@ -24,4 +20,9 @@ Gem::Specification.new do |spec|
 
   spec.add_development_dependency "bundler", "~> 1.3"
   spec.add_development_dependency "rake"
+
+  spec.add_dependency "rspec"
+  spec.add_dependency "mongo"
+  spec.add_dependency "bson"
+
 end
