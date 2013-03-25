@@ -1,4 +1,11 @@
+
 module Mongobox
+
+  class Hash
+    def get_id_value
+      self[:_id]
+    end
+  end
 
   class Box
     
@@ -54,13 +61,13 @@ module Mongobox
       collection.remove(key.intern => value)
     end
 
-    def get(id)
+    def get(id_value)
       collection.find("_id" => build_id(id_value)).first
     end
 
     def find(key,value,*fields)
       #TODO :fields => [arg0,arg1...]
-      collection.find(key.intern => value).sort(:timestamp => :desc).to_a
+      collection.find(key.intern => value).sort(:timestamp => :asc).to_a
     end
 
     def find_a_set
@@ -76,6 +83,10 @@ module Mongobox
       # Regexp::EXTENDED #=> 2
       # Regexp::MULTILINE #=> 4
       find(key,Regexp.new(query, options.join('|')))
+    end
+
+    def find_where(&criteria)
+      find_all.select(&criteria)
     end
 
     def find_all
@@ -95,7 +106,7 @@ module Mongobox
     end
 
     def copy(item)
-      item['_id'] = nil
+      item.delete(:_id) if item[:id]
       store(item)
     end
 
