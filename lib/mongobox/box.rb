@@ -25,18 +25,18 @@ module Mongobox
 
     attr_reader :database
 
-    def initialize(args = {}, collection_name = nil)
-      validate_args  
-      db = Mongo::Connection.from_uri(MongolabUrl).db(args[:database_name])
-      # if args[:login] && args[:password]
+    def initialize(args = {})
+      validate_args args 
+      db = Mongo::Connection.from_uri(args[:url]).db(args[:database_name])
       db.authenticate(args[:login],args[:password])
       @database = db
     end
 
-    def validate_args
+    def validate_args args
       args_required = [:database_name, :login, :password]
-      raise "missing arg" if (args & args_required).empty?
-      args.merge({strict: false}) unless args[:strict]
+      raise "missing arg" unless ((args.keys & args_required) == args_required)
+      args.merge!({strict: false}) unless args[:strict]
+      args.merge!({url: MongolabUrl}) unless args[:url]
     end
 
     def read_credentials_from_file
@@ -66,7 +66,7 @@ module Mongobox
 
     def store(item)
       begin
-        id = collection.insert(item.merge({:timestamp => Time.now}))
+        id = collection.insert(item.merge!({:timestamp => Time.now}))
       rescue Mongo::OperationFailure => failure
         failure
       else
@@ -115,7 +115,7 @@ module Mongobox
     end
 
     def update(id, item)
-      collection.update({"_id" => build_id(id)}, item.merge(:timestamp => Time.now))
+      collection.update({"_id" => build_id(id)}, item.merge!(:timestamp => Time.now))
     end
 
     def update_field(id, key, value)
