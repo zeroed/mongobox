@@ -1,9 +1,20 @@
 
 module Mongobox
 
-  class Hash
+  class ::Hash
     def get_id_value
       self[:_id]
+    end
+  end
+
+  # unpolluted version
+  def self.monkeypatch_hash!(hash)
+    unless hash.respond_to? :get_id_value
+      hash.instance_eval do
+        def get_id_value
+          self['_id']
+        end
+      end
     end
   end
 
@@ -14,22 +25,28 @@ module Mongobox
 
     attr_reader :database
 
-    def initialize(database_name, args = {}, collection_name = nil)
-      args.merge({strict: false}) unless args[:strict]
-      db = Mongo::Connection.from_uri(MongolabUrl).db(database_name)
-      if args[:login] && args[:password]
-        db.authenticate(args[:login],args[:password])
-      else
-        login, password = 
-          File.open(File.join(File.dirname(__FILE__), UserKeyPath ),"r") do |l|
-            key = l.readline
-            key.chomp!
-          end.split '|'
-          db.authenticate(login,password)
-      end
+    def initialize(args = {}, collection_name = nil)
+      validate_args  
+      db = Mongo::Connection.from_uri(MongolabUrl).db(args[:database_name])
+      # if args[:login] && args[:password]
+      db.authenticate(args[:login],args[:password])
       @database = db
     end
 
+    def validate_args
+      args_required = [:database_name, :login, :password]
+      raise "missing arg" unless (args & args_required).empty?
+      args.merge({strict: false}) unless args[:strict]
+    end
+
+    def read_credentials_from_file
+      login, password =
+        File.open(File.join(File.dirname(__FILE__), UserKeyPath ),"r") do |l|
+          key = l.readline
+          key.chomp!
+        end.split '|'
+    end
+  
     def collections
       collections = []
       @database.collection_names.each do |c|
@@ -106,7 +123,7 @@ module Mongobox
     end
 
     def copy(item)
-      item.delete(:_id) if item[:id]
+      item.delete(:_id) if item[:_id]
       store(item)
     end
 
