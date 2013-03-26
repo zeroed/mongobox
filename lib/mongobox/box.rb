@@ -35,7 +35,7 @@ module Mongobox
 
     def validate_args
       args_required = [:database_name, :login, :password]
-      raise "missing arg" unless (args & args_required).empty?
+      raise "missing arg" if (args & args_required).empty?
       args.merge({strict: false}) unless args[:strict]
     end
 
