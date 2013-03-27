@@ -27,9 +27,9 @@ module Mongobox
 
     def initialize(args = {})
       validate_args args 
-      db = Mongo::Connection.from_uri(args[:url]).db(args[:database_name])
-      db.authenticate(args[:login],args[:password])
-      @database = db
+      @database = Mongo::Connection.from_uri(args[:url]).db(args[:database_name]).tap do |db|
+        db.authenticate(args[:login],args[:password])
+      end
     end
 
     def validate_args args
