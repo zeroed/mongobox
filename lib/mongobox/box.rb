@@ -102,7 +102,7 @@ module Mongobox
       find(key,Regexp.new(query, options.join('|')))
     end
 
-    def find_where(&criteria)
+    def find_where(criteria)
       find_all.select(&criteria)
     end
 
@@ -123,7 +123,7 @@ module Mongobox
     end
 
     def copy(item)
-      item.delete(:_id) if item[:_id]
+      item.delete("_id") if item[:_id]
       store(item)
     end
 
