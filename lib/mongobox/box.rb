@@ -3,7 +3,7 @@ module Mongobox
 
   class ::Hash
     def get_id_value
-      self[:_id]
+      self['_id'].to_s
     end
   end
 
@@ -12,7 +12,7 @@ module Mongobox
     unless hash.respond_to? :get_id_value
       hash.instance_eval do
         def get_id_value
-          self['_id']
+          self['_id'].to_s
         end
       end
     end
@@ -64,13 +64,17 @@ module Mongobox
       end
     end
 
+    def delete_collection(collection_name)
+      @database.collection.drop(collection_name)
+    end
+
     def store(item)
       begin
         id = collection.insert(item.merge!({:timestamp => Time.now}))
       rescue Mongo::OperationFailure => failure
         failure
       else
-       collection.find("_id" => id).first
+       collection.find(ID => id).first
       end
     end
 
@@ -79,7 +83,7 @@ module Mongobox
     end
 
     def get(id_value)
-      collection.find("_id" => build_id(id_value)).first
+      collection.find(ID => build_id(id_value)).first
     end
 
     def find(key,value,*fields)
@@ -119,11 +123,11 @@ module Mongobox
     end
 
     def update_field(id, key, value)
-      collection.update({"_id" => build_id(id)}, {"$set" => {key.itern => value, :timestamp => Time.now}})
+      collection.update({ID => build_id(id)}, {"$set" => {key.intern => value, :timestamp => Time.now}})
     end
 
     def copy(item)
-      item.delete("_id") if item[:_id]
+      item.delete(ID) if item[:_id]
       store(item)
     end
 
