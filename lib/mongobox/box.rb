@@ -1,9 +1,10 @@
 
 module Mongobox
+  include Constants
 
   class ::Hash
     def get_id_value
-      self['_id'].to_s
+      self.fetch('_id').to_s { raise NoKeyException }
     end
   end
 
@@ -12,7 +13,7 @@ module Mongobox
     unless hash.respond_to? :get_id_value
       hash.instance_eval do
         def get_id_value
-          self['_id'].to_s
+          self.fetch('_id').to_s { raise NoKeyException }
         end
       end
     end
@@ -21,7 +22,6 @@ module Mongobox
   class Box
     
     include Mongo
-    include Constants
 
     attr_reader :database
 
