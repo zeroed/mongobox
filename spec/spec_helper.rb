@@ -27,16 +27,14 @@ RSpec.configure do |config|
 end
 
 def setup
-  @box = Mongobox::Box.new({database_name: 'foobar', login: 'foo', password: 'bar'})
+  # @box = Mongobox::Box.new({database_name: 'foobar', login: 'foo', password: 'bar'})
 end
 def teardown
   # ...
 end
 
 def clean_mongodb
-  @box.collections.each do |collection|
-    unless collection.name =~ /^system\./
-      collection.remove
-    end
+  @box.collections.each do |collection_name|
+    @box.database.collection(collection_name).drop unless collection_name =~ /^system\./
   end
 end

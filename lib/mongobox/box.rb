@@ -51,7 +51,7 @@ module Mongobox
     def collections
       collections = []
       @database.collection_names.each do |c|
-        puts "#{c} : #{@database.collection(c).count}"
+        puts "#{c} : #{@database.collection(c).count}" if @verbose
         collections << c
       end
       collections
@@ -65,8 +65,8 @@ module Mongobox
       end
     end
 
-    def delete_collection(collection_name)
-      @database.collection.drop(collection_name)
+    def delete_collection
+      @database.collection(@collection.name).drop
     end
 
     def store(item)
@@ -75,7 +75,7 @@ module Mongobox
       rescue Mongo::OperationFailure => failure
         failure
       else
-       collection.find(ID => id).first
+       collection.find(Constants::ID => id).first
       end
     end
 
@@ -84,7 +84,7 @@ module Mongobox
     end
 
     def get(id_value)
-      collection.find(ID => build_id(id_value)).first
+      collection.find(Constants::ID => build_id(id_value)).first
     end
 
     def find(key,value,*fields)
