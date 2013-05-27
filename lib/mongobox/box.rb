@@ -1,6 +1,7 @@
 
+# lib/mongobox/box.rb'
+
 module Mongobox
-  include Constants
 
   class ::Hash
     def get_id_value
@@ -25,10 +26,11 @@ module Mongobox
 
     attr_reader :database
 
-    def initialize(args = {})
-      validate_args args 
+    def initialize(args = {}, secure = nil)
+      validate_args(args) if secure
+      args.merge!({url: Constants::MongoDefaultLocalhost}) unless args[:url]
       @database = Mongo::Connection.from_uri(args[:url]).db(args[:database_name]).tap do |db|
-        db.authenticate(args[:login],args[:password])
+        db.authenticate(args[:login],args[:password]) if secure
       end
     end
 
@@ -36,7 +38,6 @@ module Mongobox
       args_required = [:database_name, :login, :password]
       raise "missing arg" unless ((args.keys & args_required) == args_required)
       args.merge!({strict: false}) unless args[:strict]
-      args.merge!({url: MongolabUrl}) unless args[:url]
     end
 
     def read_credentials_from_file
